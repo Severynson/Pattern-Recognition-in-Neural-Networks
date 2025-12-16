@@ -11,12 +11,11 @@ def init_mlp(input_size, hidden_size, output_size, seed=42, w_scale=0.1):
     }
 
 def forward_single(x, params):
-    W1, b1, W2, b2 = params["W1"], params["b1"], params["W2"], params["b2"]
-    z1 = W1 @ x + b1
+    z1 = params["W1"] @ x + params["b1"]
     a1 = relu(z1)
-    z2 = W2 @ a1 + b2
+    z2 = params["W2"] @ a1 + params["b2"]
     probs = softmax(z2)
-    cache = {"x": x, "z1": z1, "a1": a1, "z2": z2, "probs": probs}
+    cache = {"x": x, "z1": z1, "a1": a1, "probs": probs}
     return probs, cache
 
 def predict_single(x, params):

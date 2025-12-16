@@ -1,80 +1,65 @@
 import numpy as np
 from .activations import relu, softmax
 
+def build_handcrafted_feature_bank_vectors():
+    # Each mask is already length-15 (row-major)
+    right_edge = np.array([
+        0,0,1,
+        0,0,1,
+        0,0,1,
+        0,0,1,
+        0,0,1
+    ], dtype=np.float32)
 
-def build_handcrafted_feature_bank():
-    # Masks (5x3)
-    right_edge = np.array(
-        [
-            [0, 0, 1],
-            [0, 0, 1],
-            [0, 0, 1],
-            [0, 0, 1],
-            [0, 0, 1],
-        ]
-    )
+    three_horizontal = np.array([
+        1,1,1,
+        0,0,0,
+        1,1,1,
+        0,0,0,
+        1,1,1
+    ], dtype=np.float32)
 
-    three_horizontal = np.array(
-        [
-            [1, 1, 1],
-            [0, 0, 0],
-            [1, 1, 1],
-            [0, 0, 0],
-            [1, 1, 1],
-        ]
-    )
+    middle_dot = np.array([
+        0,0,0,
+        0,0,0,
+        0,1,0,
+        0,0,0,
+        0,0,0
+    ], dtype=np.float32)
 
-    middle_dot = np.array(
-        [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 1, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-        ]
-    )
+    row2_left = np.array([
+        0,0,0,
+        1,0,0,
+        0,0,0,
+        0,0,0,
+        0,0,0
+    ], dtype=np.float32)
 
-    row2_left = np.array(
-        [
-            [0, 0, 0],
-            [1, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-        ]
-    )
+    row2_right = np.array([
+        0,0,0,
+        0,0,1,
+        0,0,0,
+        0,0,0,
+        0,0,0
+    ], dtype=np.float32)
 
-    row2_right = np.array(
-        [
-            [0, 0, 0],
-            [0, 0, 1],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-        ]
-    )
+    row4_left = np.array([
+        0,0,0,
+        0,0,0,
+        0,0,0,
+        1,0,0,
+        0,0,0
+    ], dtype=np.float32)
 
-    row4_left = np.array(
-        [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [1, 0, 0],
-            [0, 0, 0],
-        ]
-    )
+    row4_right = np.array([
+        0,0,0,
+        0,0,0,
+        0,0,0,
+        0,0,1,
+        0,0,0
+    ], dtype=np.float32)
 
-    row4_right = np.array(
-        [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 1],
-            [0, 0, 0],
-        ]
-    )
-
-    hidden_masks = [
+    masks = [
         three_horizontal,
         middle_dot,
         right_edge,
@@ -83,103 +68,78 @@ def build_handcrafted_feature_bank():
         row4_left,
         row4_right,
     ]
-    W_hand = np.stack([m.reshape(-1) for m in hidden_masks], axis=0)  # (7, 15)
-    b_hand = np.zeros(W_hand.shape[0], dtype=np.float32)
-    return hidden_masks, W_hand.astype(np.float32), b_hand
 
+    W_hand = np.stack(masks, axis=0)               # (7,15)
+    b_hand = np.zeros(W_hand.shape[0], dtype=np.float32)  # (7,)
+    return masks, W_hand, b_hand
+
+import numpy as np
 
 def build_manual_output_layer():
-    # each entry is 7 pairs [weight, bias]
-    neuron_classifying_0 = [[1, 0], [-100, 0], [0, 0], [1, 0], [1, 0], [1, 0], [1, 0]]
-    neuron_classifying_1 = [
-        [-1, 0],
-        [-1000, 0],
-        [2, 0],
-        [-1000, 0],
-        [0, 0],
-        [-1000, 0],
-        [0, 0],
-    ]
-    neuron_classifying_2 = [
-        [1, 0],
-        [0, 0],
-        [0, 0],
-        [-100, 0],
-        [0, 0],
-        [0, 0],
-        [-100, 0],
-    ]
-    neuron_classifying_3 = [
-        [1, 0],
-        [0, 0],
-        [0, 0],
-        [-100, 0],
-        [1, 0],
-        [-100, 0],
-        [1, 0],
-    ]
-    neuron_classifying_4 = [[0, 0], [1, 0], [1, 0], [3, 0], [0, 0], [-100, 0], [0, 0]]
-    neuron_classifying_5 = [
-        [1, 0],
-        [0, 0],
-        [0, 0],
-        [1, 0],
-        [-100, 0],
-        [-100, 0],
-        [1, 0],
-    ]
-    neuron_classifying_6 = [[1, 0], [0, 0], [0, 0], [1, 0], [-100, 0], [2, -1], [1, 0]]
-    neuron_classifying_7 = [
-        [0, 0],
-        [9, 0],
-        [0, 0],
-        [-100, 0],
-        [0, 0],
-        [-100, 0],
-        [0, 0],
-    ]
-    neuron_classifying_8 = [[1, 0], [0, 0], [0, 0], [1, 0], [1, 0], [2, -1], [1, 0]]
-    neuron_classifying_9 = [[1, 0], [0, 0], [0, 0], [1, 0], [1, 0], [-100, 0], [1, 0]]
+    """
+    Output layer takes hidden vector h of length 7 and outputs 10 logits.
+      z = W_out @ h + b_out
+    Shapes:
+      W_out: (10, 7)
+      b_out: (10,)
+    """
 
-    out_lists = [
-        neuron_classifying_0,
-        neuron_classifying_1,
-        neuron_classifying_2,
-        neuron_classifying_3,
-        neuron_classifying_4,
-        neuron_classifying_5,
-        neuron_classifying_6,
-        neuron_classifying_7,
-        neuron_classifying_8,
-        neuron_classifying_9,
-    ]
+    # Each row is weights for one digit-class neuron over the 7 hidden features
+    W_out = np.array([
+        # class 0
+        [  1, -100,   0,   1,   1,   1,   1],
+        # class 1
+        [ -1, -1000,  2, -1000, 0, -1000, 0],
+        # class 2
+        [  1,   0,    0,  -100, 0,   0,  -100],
+        # class 3
+        [  1,   0,    0,  -100, 1,  -100, 1],
+        # class 4
+        [  0,   1,    1,    3,  0,  -100, 0],
+        # class 5
+        [  1,   0,    0,    1, -100, -100, 1],
+        # class 6
+        [  1,   0,    0,    1, -100,   2,  1],
+        # class 7
+        [  0,   9,    0,  -100, 0,  -100, 0],
+        # class 8
+        [  1,   0,    0,    1,   1,   2,  1],
+        # class 9
+        [  1,   0,    0,    1,   1, -100, 1],
+    ], dtype=np.float32)
 
-    hidden_size = 7
-    W_out = np.zeros((10, hidden_size), dtype=np.float32)
-    b_out = np.zeros(10, dtype=np.float32)
-
-    for k, neuron in enumerate(out_lists):
-        neuron = np.array(neuron, dtype=np.float32)
-        W_out[k] = neuron[:, 0]
-        b_out[k] = neuron[:, 1].sum()
+    # One scalar bias per output neuron (class)
+    # In your old pair format, only some classes had -1 somewhere; those summed into b.
+    b_out = np.array([
+        0,  # class 0
+        0,  # class 1
+        0,  # class 2
+        0,  # class 3
+        0,  # class 4
+        0,  # class 5
+        -1, # class 6
+        0,  # class 7
+        -1, # class 8
+        0,  # class 9
+    ], dtype=np.float32)
 
     return W_out, b_out
 
 
 class ManualFeatureNet:
     def __init__(self):
-        self.hidden_masks, self.W_hand, self.b_hand = build_handcrafted_feature_bank()
+        self.hidden_masks, self.W_hand, self.b_hand = build_handcrafted_feature_bank_vectors()
         self.W_out, self.b_out = build_manual_output_layer()
-
-    def forward_probs(self, x_vec):
-        h_raw = self.W_hand @ x_vec + self.b_hand
-        h = relu(h_raw)
-        z = self.W_out @ h + self.b_out
-        return softmax(z)
-
-    def predict(self, x_vec):
-        return int(np.argmax(self.forward_probs(x_vec)))
 
     def hidden_activations(self, x_vec):
         h_raw = self.W_hand @ x_vec + self.b_hand
         return relu(h_raw)
+
+    def forward_probs(self, x_vec):
+        h = self.hidden_activations(x_vec)
+        z = self.W_out @ h + self.b_out
+
+        return softmax(z)
+
+    def predict(self, x_vec):
+        return int(np.argmax(self.forward_probs(x_vec)))
