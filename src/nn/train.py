@@ -1,8 +1,30 @@
 import numpy as np
 from .mlp import forward_single
 
+
 def cross_entropy_loss(probs, true_label, eps=1e-12):
+    # We are in single-label classification (only 1 correct class with  100% prob. of a single correct class, 0% for others).
+    # While general cross-entropy definition is:
+    #   L = - ∑_i ( true_prob_i * log(predicted_prob_i) )
+
+    # Example:
+    #   Classes: [a, b, c]
+    #   True probabilities:      y = [1, 0, 0]      (class 'a' is correct)
+    #   Predicted probabilities: p = [0.33, 0.33, 0.34]
+
+    # Plug into the formula:
+    #   L = - (1 * log(0.33) + 0 * log(0.33) + 0 * log(0.34))
+    #     = - log(0.33)
+
+    # All terms except the correct class vanish because their true probability is 0.
+    # So cross-entropy collapses to:
+    #   L = -log(predicted probability assigned by the model to the true class)
+
+    # probs[true_label] picks p_correct from the predicted distribution.
+    # eps is added only to avoid log(0) for numerical stability.
+
     return -np.log(probs[true_label] + eps)
+
 
 def train_mlp(X, y, params, learning_rate=0.1, epochs=1000, print_every=100):
     n = X.shape[0]
@@ -41,7 +63,10 @@ def train_mlp(X, y, params, learning_rate=0.1, epochs=1000, print_every=100):
             db1 += dz1
 
         # average
-        dW1 /= n; db1 /= n; dW2 /= n; db2 /= n
+        dW1 /= n
+        db1 /= n
+        dW2 /= n
+        db2 /= n
 
         # step
         params["W1"] -= learning_rate * dW1
@@ -50,6 +75,8 @@ def train_mlp(X, y, params, learning_rate=0.1, epochs=1000, print_every=100):
         params["b2"] -= learning_rate * db2
 
         if epoch == 1 or epoch % print_every == 0:
-            print(f"[MLP] Epoch {epoch:4d} | loss={total_loss/n:.4f} | acc={100*correct/n:.1f}%")
+            print(
+                f"[MLP] Epoch {epoch:4d} | loss={total_loss/n:.4f} | acc={100*correct/n:.1f}%"
+            )
 
     return params
